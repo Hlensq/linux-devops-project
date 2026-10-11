@@ -63,7 +63,7 @@ pipeline {
                         exit 1
                     fi
 
-                    if ! curl -fsS --retry 10 --retry-delay 2 \
+                    if ! curl -fsS --retry 10 --retry-all-errors --retry-delay 2 \
                         "http://localhost:$HOST_PORT/" >/dev/null; then
 
                         echo "Health check failed. Rolling back."
