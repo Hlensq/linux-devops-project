@@ -70,12 +70,22 @@ pipeline {
 
                         docker rm -f "$NEW_CONTAINER_NAME" >/dev/null 2>&1 || true
 
-                        if [ "$OLD_EXISTS" -eq 1 ]; then
-                            docker rename "$OLD_CONTAINER_NAME" "$CONTAINER_NAME"
-                            docker start "$CONTAINER_NAME"
-                        fi
+                    if [ "$OLD_EXISTS" -eq 1 ]; then
+			    docker rename "$OLD_CONTAINER_NAME" "$CONTAINER_NAME"
+			    docker start "$CONTAINER_NAME"
 
-                        exit 1
+			    if curl -fsS --retry 5 --retry-all-errors --retry-delay 2 \
+			        "http://localhost:$HOST_PORT/" >/dev/null; then
+			        echo "Rollback successful. Previous version is healthy."
+			        exit 0
+			    else
+			        echo "Rollback failed: previous version is unhealthy."
+			        exit 1
+			    fi
+                    fi
+
+		    echo "Rollback failed: no previous container to restore."
+	            exit 1
                     fi
 
                     docker rename "$NEW_CONTAINER_NAME" "$CONTAINER_NAME"
